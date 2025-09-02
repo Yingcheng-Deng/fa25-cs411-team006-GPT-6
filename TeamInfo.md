@@ -1,28 +1,26 @@
-# team000-sample
-
 ## Basic Information
 
 |   Info      |        Description     |
 | ----------- | ---------------------- |
-| TeamID      |        Team-000        |
-| TeamName    |         sample         |
-| Captain     |       Daniel Kang     |
-| Captain     |  ddkang@illinois.edu  |
-| Member1     |  Chuxuan Hu   |
-| Member1     |  chuxuan3@illinois.edu  |
-| Member2     |     Tengjun Jin     |
-| Member2     |  tengjun2@illinois.edu  |
-| Member3     |                        |
-| Member3     |                        |
+| TeamID      |        Team-006        |
+| TeamName    |         GPT-6         |
+| Captain     |       Tiger Gao     |
+| Captain     |  sg74@illinois.edu  |
+| Member1     |  Jiajun Gao   |
+| Member1     |  jiajung3@illinois.edu  |
+| Member2     |    Yingcheng Deng     |
+| Member2     |  yd22@illinois.edu  |
+| Member3     |            Ke Yao            |
+| Member3     |           keyao2@illinois.edu             |
 
 ## Project Information
 
 |   Info      |        Description     |
 | ----------- | ---------------------- |
-|  Title      |       ProjectTitle     |
-| System URL  |      link_to_system    |
-| Video Link  |      link_to_video     |
+|  Title      |       TBD     |
+| System URL  |      TBD    |
+| Video Link  |      TBD     |
 
 ## Project Summary
 
-This is a summary of the project!
+TBD
