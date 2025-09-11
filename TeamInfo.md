@@ -23,4 +23,4 @@
 
 ## Project Summary
 
-TBD
+"Ultimate E-commerce DB" is a seller-focused e-commerce management platform that helps online merchants manage their product listings, track inventory levels, monitor storage usage, and analyze sales performance. It is built on a real-world dataset to demonstrate relational database design, complex queries, and data-driven analytics.
