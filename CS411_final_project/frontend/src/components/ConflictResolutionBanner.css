@@ -1,0 +1,142 @@
+.conflict-banner {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.conflict-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.conflict-icon {
+  font-size: 2rem;
+}
+
+.conflict-content {
+  flex: 1;
+}
+
+.conflict-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: #856404;
+  font-size: 1.1rem;
+}
+
+.conflict-content p {
+  margin: 0;
+  color: #856404;
+}
+
+.close-btn {
+  padding: 0.5rem 1rem;
+  background: #ffc107;
+  color: #856404;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.close-btn:hover {
+  background: #ffb300;
+}
+
+.toggle-diff {
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 1px solid #ffc107;
+  color: #856404;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  transition: all 0.2s;
+}
+
+.toggle-diff:hover {
+  background: #ffc107;
+  color: white;
+}
+
+.diff-view {
+  background: white;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.diff-view h4 {
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.diff-table th,
+.diff-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.diff-table th {
+  background: #f5f5f5;
+  font-weight: 600;
+  color: #333;
+}
+
+.diff-table tr.changed {
+  background: #fff3cd;
+}
+
+.diff-table .current-value {
+  color: #28a745;
+}
+
+.diff-table .submitted-value {
+  color: #dc3545;
+}
+
+.conflict-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-use-current,
+.btn-use-submitted {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-use-current {
+  background: #28a745;
+  color: white;
+}
+
+.btn-use-current:hover {
+  background: #218838;
+}
+
+.btn-use-submitted {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-use-submitted:hover {
+  background: #c82333;
+}
+
