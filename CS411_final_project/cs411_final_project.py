@@ -40,7 +40,12 @@ def load_from_kaggle():
         # Define the source and destination paths
         # Corrected path based on the file listing in the previous execution
         source_db_path = os.path.join(path, "olist.sqlite")
-        destination_db_path = "/content/ecommerce.db" # Keep the destination name consistent
+        # Copy to project root directory (cross-platform compatible)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        destination_db_path = os.path.join(script_dir, "ultimate_ecommerce.db")
+
+        # Ensure the destination directory exists
+        os.makedirs(os.path.dirname(destination_db_path), exist_ok=True)
 
         # Copy the database file to a writable location
         shutil.copyfile(source_db_path, destination_db_path)
@@ -87,7 +92,9 @@ def create_database_schema(conn):
         height_cm DECIMAL(10,2),
         width_cm DECIMAL(10,2),
         category_name VARCHAR(100),
-        photos_qty INTEGER DEFAULT 0
+        photos_qty INTEGER DEFAULT 0,
+        version INTEGER DEFAULT 1,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
@@ -129,6 +136,7 @@ def create_database_schema(conn):
         delivered_carrier_date TIMESTAMP,
         delivered_customer_date TIMESTAMP,
         est_delivery_date DATE,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (customer_id) REFERENCES Customers(customer_id) ON DELETE RESTRICT
     )
     """)

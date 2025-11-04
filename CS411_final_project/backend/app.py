@@ -309,7 +309,10 @@ def create_product():
         
     except Exception as e:
         db.rollback()
-        return jsonify({'error': str(e)}), 400
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Error creating product: {error_details}")
+        return jsonify({'error': str(e), 'details': error_details}), 400
 
 @app.route('/api/products/<product_id>', methods=['PUT'])
 def update_product(product_id):
