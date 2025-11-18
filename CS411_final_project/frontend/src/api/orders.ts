@@ -63,7 +63,8 @@ export const ordersApi = {
 
   getById: async (orderId: string): Promise<OrderDetail> => {
     const response = await api.get(`/orders/${orderId}`)
-    return response.data
+    // Backend now returns order data directly with items, payments, status_history
+    return response.data as OrderDetail
   },
 
   updateStatus: async (orderId: string, status: string, notes?: string): Promise<Order> => {

@@ -240,7 +240,9 @@ def create_product():
     """Create new product (idempotent)"""
     db = get_db()
     cursor = db.cursor()
-    data = request.json
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Request body must be JSON'}), 400
     
     # Check if product already exists (idempotency)
     product_id = data.get('product_id')
@@ -319,7 +321,9 @@ def update_product(product_id):
     """Update product with optimistic locking"""
     db = get_db()
     cursor = db.cursor()
-    data = request.json
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Request body must be JSON'}), 400
     
     # Get current version
     cursor.execute("SELECT version, * FROM Products WHERE product_id = ?", (product_id,))
@@ -432,12 +436,27 @@ def delete_product(product_id):
     if not product:
         return jsonify({'error': 'Product not found'}), 404
     
+    # Check if product is referenced in Order_Items (foreign key constraint)
+    cursor.execute("SELECT COUNT(*) FROM Order_Items WHERE product_id = ?", (product_id,))
+    order_items_count = cursor.fetchone()[0]
+    if order_items_count > 0:
+        return jsonify({
+            'error': f'Cannot delete product: it is referenced in {order_items_count} order item(s). Please remove or update the related orders first.'
+        }), 400
+    
     try:
+        # Get deleted_by from request if available, otherwise use default
+        # Use get_json(silent=True) to avoid Content-Type errors for DELETE requests
+        data = request.get_json(silent=True)
+        deleted_by = 'system'
+        if data:
+            deleted_by = data.get('deleted_by', 'system')
+        
         # Audit log
         cursor.execute("""
             INSERT INTO Audit_Log (table_name, record_id, action, old_values, changed_by)
             VALUES ('Products', ?, 'DELETE', ?, ?)
-        """, (product_id, json.dumps(dict(product)), request.json.get('deleted_by', 'system')))
+        """, (product_id, json.dumps(dict(product)), deleted_by))
         
         cursor.execute("DELETE FROM Products WHERE product_id = ?", (product_id,))
         db.commit()
@@ -446,7 +465,13 @@ def delete_product(product_id):
         
     except Exception as e:
         db.rollback()
-        return jsonify({'error': str(e)}), 400
+        # Provide more user-friendly error messages
+        error_msg = str(e)
+        if 'FOREIGN KEY constraint' in error_msg or 'foreign key constraint' in error_msg:
+            return jsonify({
+                'error': 'Cannot delete product: it is referenced by other records (orders, reviews, etc.). Please remove or update the related records first.'
+            }), 400
+        return jsonify({'error': error_msg}), 400
 
 @app.route('/api/products/categories', methods=['GET'])
 def get_categories():
@@ -502,8 +527,9 @@ def get_orders():
         params.append(date_to)
     
     if customer_id:
-        query += " AND o.customer_id = ?"
-        params.append(customer_id)
+        # Support partial matching for customer ID search
+        query += " AND o.customer_id LIKE ?"
+        params.append(f'%{customer_id}%')
     
     query += " GROUP BY o.order_id ORDER BY o.purchase_ts DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
@@ -524,8 +550,9 @@ def get_orders():
         count_query += " AND DATE(o.purchase_ts) <= ?"
         count_params.append(date_to)
     if customer_id:
-        count_query += " AND o.customer_id = ?"
-        count_params.append(customer_id)
+        # Support partial matching for customer ID search
+        count_query += " AND o.customer_id LIKE ?"
+        count_params.append(f'%{customer_id}%')
     
     cursor.execute(count_query, count_params)
     total = cursor.fetchone()[0]
@@ -581,19 +608,21 @@ def get_order(order_id):
     
     status_history = [dict(row) for row in cursor.fetchall()]
     
-    return jsonify({
-        'order': dict(order),
-        'items': items,
-        'payments': payments,
-        'status_history': status_history
-    })
+    # Combine order data with items, payments, and status_history for frontend
+    order_dict = dict(order)
+    order_dict['items'] = items
+    order_dict['payments'] = payments
+    order_dict['status_history'] = status_history
+    
+    return jsonify(order_dict)
 
 @app.route('/api/orders/<order_id>/status', methods=['PUT'])
 def update_order_status(order_id):
     """Update order status with history tracking"""
     db = get_db()
     cursor = db.cursor()
-    data = request.json
+    # Use get_json(silent=True) to handle cases where Content-Type might not be set correctly
+    data = request.get_json(silent=True) or {}
     
     cursor.execute("SELECT status FROM Orders WHERE order_id = ?", (order_id,))
     result = cursor.fetchone()
@@ -659,7 +688,8 @@ def update_order_item(order_id, item_id):
     """Update order item"""
     db = get_db()
     cursor = db.cursor()
-    data = request.json
+    # Use get_json(silent=True) to handle cases where Content-Type might not be set correctly
+    data = request.get_json(silent=True) or {}
     
     cursor.execute("SELECT * FROM Order_Items WHERE order_item_id = ? AND order_id = ?", (item_id, order_id))
     item = cursor.fetchone()
@@ -698,7 +728,7 @@ def cancel_order(order_id):
     """Cancel order and update inventory"""
     db = get_db()
     cursor = db.cursor()
-    data = request.json
+    data = request.get_json(silent=True) or {}
     
     cursor.execute("SELECT status FROM Orders WHERE order_id = ?", (order_id,))
     result = cursor.fetchone()
@@ -743,7 +773,7 @@ def refund_order(order_id):
     """Refund order"""
     db = get_db()
     cursor = db.cursor()
-    data = request.json
+    data = request.get_json(silent=True) or {}
     
     cursor.execute("SELECT status FROM Orders WHERE order_id = ?", (order_id,))
     result = cursor.fetchone()
@@ -834,31 +864,32 @@ def get_category_distribution():
 
 @app.route('/api/reports/top-products', methods=['GET'])
 def get_top_products():
-    """Get top selling products"""
+    """Get top selling products - Uses Advanced Query 1: Top Selling Products with Revenue Analysis"""
     db = get_db()
     cursor = db.cursor()
     
-    limit = int(request.args.get('limit', 10))
-    days = int(request.args.get('days', 30))
+    limit = int(request.args.get('limit', 15))
     
+    # This is based on Advanced Query 1 from cs411_final_project.py
     cursor.execute("""
-        SELECT 
+        SELECT
             p.product_id,
             p.title,
             p.category_name,
-            COUNT(DISTINCT o.order_id) as order_count,
-            SUM(oi.quantity) as units_sold,
-            SUM(oi.quantity * oi.unit_price) as revenue,
-            AVG(oi.unit_price) as avg_price
+            COUNT(DISTINCT o.order_id) as total_orders,
+            SUM(oi.quantity) as total_quantity_sold,
+            SUM(oi.quantity * oi.unit_price) as total_revenue,
+            AVG(oi.unit_price) as avg_selling_price,
+            MAX(o.purchase_ts) as last_sold_date
         FROM Products p
         INNER JOIN Order_Items oi ON p.product_id = oi.product_id
         INNER JOIN Orders o ON oi.order_id = o.order_id
-        WHERE o.status != 'canceled'
-          AND o.purchase_ts >= date('now', '-' || ? || ' days')
-        GROUP BY p.product_id, p.title, p.category_name
-        ORDER BY revenue DESC
+        WHERE o.status IN ('delivered', 'shipped')
+        GROUP BY p.product_id, p.category_name, p.title
+        HAVING total_revenue > 1000
+        ORDER BY total_revenue DESC
         LIMIT ?
-    """, (days, limit))
+    """, (limit,))
     
     products = [dict(row) for row in cursor.fetchall()]
     

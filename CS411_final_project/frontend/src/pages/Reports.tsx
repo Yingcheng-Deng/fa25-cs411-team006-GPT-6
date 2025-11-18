@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   PieChart,
@@ -14,31 +12,27 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
-import { reportsApi, SalesTrend, CategoryDistribution, TopProduct } from '../api/reports'
+import { reportsApi, CategoryDistribution, TopProduct } from '../api/reports'
 import './Reports.css'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#ff7300']
 
 const Reports = () => {
-  const [salesTrends, setSalesTrends] = useState<SalesTrend[]>([])
   const [categoryDistribution, setCategoryDistribution] = useState<CategoryDistribution[]>([])
   const [topProducts, setTopProducts] = useState<TopProduct[]>([])
   const [loading, setLoading] = useState(true)
-  const [days, setDays] = useState(30)
 
   useEffect(() => {
     fetchReports()
-  }, [days])
+  }, [])
 
   const fetchReports = async () => {
     try {
       setLoading(true)
-      const [trends, categories, products] = await Promise.all([
-        reportsApi.getSalesTrends(days),
+      const [categories, products] = await Promise.all([
         reportsApi.getCategoryDistribution(),
-        reportsApi.getTopProducts(10, days),
+        reportsApi.getTopProducts(15), // Use limit 15 to match advanced query
       ])
-      setSalesTrends(trends)
       setCategoryDistribution(categories)
       setTopProducts(products)
     } catch (error) {
@@ -77,46 +71,9 @@ const Reports = () => {
     <div className="reports-page">
       <div className="reports-header">
         <h1>Reports</h1>
-        <div className="reports-controls">
-          <label>
-            Time Period:
-            <select value={days} onChange={(e) => setDays(parseInt(e.target.value))}>
-              <option value={7}>Last 7 days</option>
-              <option value={30}>Last 30 days</option>
-              <option value={90}>Last 90 days</option>
-            </select>
-          </label>
-        </div>
       </div>
 
       <div className="reports-grid">
-        <div className="report-card">
-          <div className="report-header">
-            <h2>Sales Trends</h2>
-            <button
-              className="export-btn"
-              onClick={() => exportToCSV(salesTrends, 'sales-trends.csv')}
-              aria-label="Export to CSV"
-            >
-              📥 Export CSV
-            </button>
-          </div>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={salesTrends} aria-label="Sales trends over time">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="revenue" stroke="#8884d8" name="Revenue ($)" />
-                <Line type="monotone" dataKey="order_count" stroke="#82ca9d" name="Orders" />
-                <Line type="monotone" dataKey="units_sold" stroke="#ffc658" name="Units Sold" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
         <div className="report-card">
           <div className="report-header">
             <h2>Category Distribution</h2>
@@ -162,8 +119,8 @@ const Reports = () => {
                 <YAxis dataKey="title" type="category" width={150} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="revenue" fill="#8884d8" name="Revenue ($)" />
-                <Bar dataKey="units_sold" fill="#82ca9d" name="Units Sold" />
+                <Bar dataKey="total_revenue" fill="#8884d8" name="Revenue ($)" />
+                <Bar dataKey="total_quantity_sold" fill="#82ca9d" name="Units Sold" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -228,16 +185,24 @@ const Reports = () => {
               </tr>
             </thead>
             <tbody>
-              {topProducts.map((product) => (
-                <tr key={product.product_id}>
-                  <td>{product.title || product.product_id}</td>
-                  <td>{product.category_name || 'N/A'}</td>
-                  <td>{product.order_count}</td>
-                  <td>{product.units_sold}</td>
-                  <td>${product.revenue.toFixed(2)}</td>
-                  <td>${product.avg_price.toFixed(2)}</td>
+              {topProducts.length > 0 ? (
+                topProducts.map((product) => (
+                  <tr key={product.product_id}>
+                    <td>{product.title || product.product_id}</td>
+                    <td>{product.category_name || 'N/A'}</td>
+                    <td>{product.total_orders}</td>
+                    <td>{product.total_quantity_sold}</td>
+                    <td>${product.total_revenue.toFixed(2)}</td>
+                    <td>${product.avg_selling_price.toFixed(2)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '20px' }}>
+                    No products found
+                  </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

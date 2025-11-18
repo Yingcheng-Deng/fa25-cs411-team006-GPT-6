@@ -45,21 +45,28 @@ const Orders = () => {
     try {
       const detail = await ordersApi.getById(orderId)
       setSelectedOrder(detail)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch order detail:', error)
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch order details'
+      alert(`Failed to fetch order details: ${errorMessage}`)
+      // Clear selected order on error
+      setSelectedOrder(null)
     }
   }
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
       await ordersApi.updateStatus(orderId, newStatus)
+      // Refresh the order list
       await fetchOrders()
+      // Refresh the selected order detail if it's the one we updated
       if (selectedOrder && selectedOrder.order_id === orderId) {
         await fetchOrderDetail(orderId)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update order status:', error)
-      alert('Failed to update order status')
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to update order status'
+      alert(`Failed to update order status: ${errorMessage}`)
     }
   }
 
@@ -172,7 +179,9 @@ const Orders = () => {
                   <div>
                     <h3>Order #{order.order_id.slice(0, 8)}</h3>
                     <p className="order-date">
-                      {new Date(order.purchase_ts).toLocaleDateString()}
+                      {order.purchase_ts 
+                        ? new Date(order.purchase_ts).toLocaleDateString() 
+                        : 'N/A'}
                     </p>
                   </div>
                   <span className={`status-badge status-${order.status}`}>
@@ -215,7 +224,11 @@ const Orders = () => {
                   <div><strong>Status:</strong> {selectedOrder.status}</div>
                   <div><strong>Customer:</strong> {selectedOrder.customer_name || selectedOrder.customer_id}</div>
                   <div><strong>Email:</strong> {selectedOrder.customer_email || 'N/A'}</div>
-                  <div><strong>Purchase Date:</strong> {new Date(selectedOrder.purchase_ts).toLocaleString()}</div>
+                  <div><strong>Purchase Date:</strong> {
+                    selectedOrder.purchase_ts 
+                      ? new Date(selectedOrder.purchase_ts).toLocaleString() 
+                      : 'N/A'
+                  }</div>
                 </div>
               </div>
 
@@ -262,7 +275,8 @@ const Orders = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedOrder.items.map(item => (
+                    {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                      selectedOrder.items.map(item => (
                       <tr key={item.order_item_id}>
                         <td>{item.product_title || item.product_id}</td>
                         <td>
@@ -305,7 +319,14 @@ const Orders = () => {
                           </button>
                         </td>
                       </tr>
-                    ))}
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center', padding: '20px' }}>
+                          No items found
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

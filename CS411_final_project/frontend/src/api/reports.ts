@@ -16,12 +16,13 @@ export interface CategoryDistribution {
 
 export interface TopProduct {
   product_id: string
-  title: string
+  title?: string
   category_name?: string
-  order_count: number
-  units_sold: number
-  revenue: number
-  avg_price: number
+  total_orders: number
+  total_quantity_sold: number
+  total_revenue: number
+  avg_selling_price: number
+  last_sold_date?: string
 }
 
 export interface DashboardStats {
@@ -42,8 +43,8 @@ export const reportsApi = {
     return response.data
   },
 
-  getTopProducts: async (limit = 10, days = 30): Promise<TopProduct[]> => {
-    const response = await api.get(`/reports/top-products?limit=${limit}&days=${days}`)
+  getTopProducts: async (limit = 15): Promise<TopProduct[]> => {
+    const response = await api.get(`/reports/top-products?limit=${limit}`)
     return response.data
   },
 

@@ -62,6 +62,8 @@ export const productsApi = {
   },
 
   delete: async (productId: string): Promise<void> => {
+    // DELETE requests typically don't have a body
+    // The axios interceptor will automatically remove Content-Type header
     await api.delete(`/products/${productId}`)
   },
 

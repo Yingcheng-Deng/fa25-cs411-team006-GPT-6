@@ -105,10 +105,14 @@ const Products = () => {
     
     try {
       await productsApi.delete(productId)
+      // Remove from local state
       setProducts(products.filter(p => p.product_id !== productId))
-    } catch (error) {
+      // Refresh the list to ensure consistency
+      await fetchProducts()
+    } catch (error: any) {
       console.error('Failed to delete product:', error)
-      alert('Failed to delete product')
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete product'
+      alert(`Failed to delete product: ${errorMessage}`)
     }
   }
 
