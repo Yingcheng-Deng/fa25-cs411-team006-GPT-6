@@ -129,7 +129,7 @@ def init_version_tracking():
     
     db.commit()
 
-# Initialize version tracking on startup (only if database exists)
+# Initialize version tracking on startup
 with app.app_context():
     try:
         # Check if database file exists
@@ -143,10 +143,7 @@ with app.app_context():
         print(f"⚠ Warning: Could not initialize version tracking: {e}")
         print("  The database may not exist yet. Please run cs411_final_project.py first.")
 
-# ============================================================================
 # PRODUCTS API
-# ============================================================================
-
 @app.route('/api/products', methods=['GET'])
 def get_products():
     """Get all products with pagination and filters"""
@@ -484,10 +481,7 @@ def get_categories():
     
     return jsonify(categories)
 
-# ============================================================================
 # ORDERS API
-# ============================================================================
-
 @app.route('/api/orders', methods=['GET'])
 def get_orders():
     """Get all orders with filters"""
@@ -806,10 +800,7 @@ def refund_order(order_id):
         db.rollback()
         return jsonify({'error': str(e)}), 400
 
-# ============================================================================
 # REPORTS API
-# ============================================================================
-
 @app.route('/api/reports/sales-trends', methods=['GET'])
 def get_sales_trends():
     """Get sales trends over time"""
@@ -937,10 +928,7 @@ def get_dashboard_stats():
         'low_stock': low_stock
     })
 
-# ============================================================================
 # DELTA POLLING API
-# ============================================================================
-
 @app.route('/api/delta/changes', methods=['GET'])
 def get_changes():
     """Get changes since last poll (delta polling)"""
@@ -988,10 +976,6 @@ def get_changes():
         'changes': changes,
         'timestamp': datetime.now().isoformat()
     })
-
-# ============================================================================
-# MAIN
-# ============================================================================
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

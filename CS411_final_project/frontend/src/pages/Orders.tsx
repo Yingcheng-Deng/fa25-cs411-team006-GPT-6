@@ -14,7 +14,6 @@ const Orders = () => {
     status: '',
     dateFrom: '',
     dateTo: '',
-    customerId: '',
   })
 
   useEffect(() => {
@@ -29,8 +28,7 @@ const Orders = () => {
         20,
         filters.status || undefined,
         filters.dateFrom || undefined,
-        filters.dateTo || undefined,
-        filters.customerId || undefined
+        filters.dateTo || undefined
       )
       setOrders(response.orders)
       setTotalPages(response.total_pages)
@@ -153,13 +151,6 @@ const Orders = () => {
           value={filters.dateTo}
           onChange={(e) => { setFilters({ ...filters, dateTo: e.target.value }); setPage(1) }}
           placeholder="To Date"
-          className="filter-input"
-        />
-        <input
-          type="text"
-          value={filters.customerId}
-          onChange={(e) => { setFilters({ ...filters, customerId: e.target.value }); setPage(1) }}
-          placeholder="Customer ID"
           className="filter-input"
         />
       </div>
