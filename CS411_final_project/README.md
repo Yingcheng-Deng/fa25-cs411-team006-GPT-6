@@ -50,6 +50,7 @@ cd backend
 ```
 
 2. Install Python dependencies:
+   (You might need to install libraries like pandas, matplotlib, and kagglehub manually)
 ```bash
 pip install -r requirements.txt
 ```
@@ -72,7 +73,7 @@ The backend will run on `http://localhost:5000`
 cd frontend
 ```
 
-2. Install Node.js dependencies:
+2. Install Node.js dependencies(Google) then run locally:
 ```bash
 npm install
 ```
